@@ -1,16 +1,17 @@
 import xmlrpc.client
 import os
 import dotenv
+import pandas as pd
+
+from django.http import JsonResponse
 
 class OdooAPI:
-    """
-    Una clase para manejar la conexión y las operaciones con la API de Odoo.
-    """
+    #clase para manejar la conexión con Odoo
     def __init__(self):
         dotenv.load_dotenv()
-        self.url = os.getenv("URL_ODOO")
-        self.db = os.getenv("DATABASE_ODOO")
-        self.user = os.getenv("USERNAME_ODOO")
+        self.url      = os.getenv("URL_ODOO")
+        self.db       = os.getenv("DATABASE_ODOO")
+        self.user     = os.getenv("USERNAME_ODOO")
         self.password = os.getenv("PASSWORD_ODOO")
         
         # Valida que todas las variables de entorno estén presentes
@@ -21,19 +22,15 @@ class OdooAPI:
         self.models = None
         self._connect()
 
+    #Funcion connect. 
     def _connect(self):
-        """
-        Establece la conexión y se autentica con Odoo.
-        """
         try:
             # Conexión para autenticación
             common = xmlrpc.client.ServerProxy(f'{self.url}/xmlrpc/2/common')
-            # print("Versión del servidor Odoo:", common.version())
 
             # Autenticación
             self.uid = common.authenticate(self.db, self.user, self.password, {})
             if self.uid:
-                print(f"Conexión exitosa. UID: {self.uid}")
                 # Proxy para llamar a los métodos de los modelos
                 self.models = xmlrpc.client.ServerProxy(f'{self.url}/xmlrpc/2/object')
             else:
@@ -43,45 +40,170 @@ class OdooAPI:
             print(f"Error al conectar con Odoo: {e}")
             raise
 
-    """ def search_read_products(self, domain=[], fields=['id', 'name', 'default_code'], limit=5):
-    
-        Ejemplo de un método para buscar y leer productos.
+    ### *Buscamos cantidades de venta por producto entre fechas dadas
+    def search_read_sales_by_product(self, start_date, end_date):
         
+        #Determinamos si hay conexión con Odoo
         if not self.models:
-            print("No hay conexión activa.")
-            return []
-            
+            return {
+                "status"  : "error",
+                "message" : "Error en la conexión. No hay conexión activa."
+            }
+
+        #Función try para leer datos solicitados
         try:
-            products = self.models.execute_kw(
+            #Hacemos la consula solo de los productos que nos interesa
+            #Esta se hace por cada linea de compra ;(
+            sales_line = self.models.execute_kw(
+                self.db, self.uid, self.password,
+                'sale.order.line', 'search_read',
+                [[
+                    ('order_id.date_order', '>=', start_date),
+                    ('order_id.date_order', '<=', end_date),
+                    ('state', 'in', ['sale', 'done']),
+                    ('product_id.categ_id.parent_id', 'ilike', 'PRODUCTO TERMINADO')
+                ]],
+                { 'fields': ['product_id', 'product_uom_qty', 'order_id'] }
+            )
+
+            #Ahora obtenemos las fechas de cada venta/orden
+            order_ids = list(set(item['order_id'][0] for item in sales_line if item.get('order_id')))
+            if not order_ids:
+                return ({
+                    "status"  : "success",
+                    "message" : "No se encontraron ventas registradas"
+                })
+
+
+            order_dates = self.models.execute_kw(
+                self.db, self.uid, self.password,
+                'sale.order', 'search_read',
+                [[ ('id', 'in', order_ids) ]],
+                { 'fields' : ['id', 'date_order']}
+            )
+
+            date_map = {order['id']: order['date_order'] for order in order_dates}
+
+            #Unimos cada compra de producto con la fecha
+            for item in sales_line:
+                if item.get('order_id'):
+                    order_id = item['order_id'][0]
+                    item['order_date'] = date_map.get(order_id)
+
+            #Damos formato con Pandas
+            df = pd.DataFrame(sales_line)
+            df.dropna(subset=['order_date'], inplace=True)
+
+            df['order_date'] = pd.to_datetime(df['order_date'])
+            df['product_name'] = df['product_id'].apply(lambda x: x[1])
+
+            sales_group = df.groupby(
+                ['product_name', pd.Grouper(key='order_date', freq='M')]
+            )['product_uom_qty'].sum().reset_index()
+
+            sales_group.rename(columns={
+                'product_uom_qty' : 'cantidad_total',
+                'order_date': 'mes'
+            }, inplace=True)
+
+            result = sales_group.to_dict('records')
+            return {"result":result}
+
+        #En caso de error al hacer la consulta en Odoo
+        except xmlrpc.client.Fault as e:
+            return ({
+                "status"       : "error",
+                "message"      : f"Error al ejecutar la consulta a Odoo: {str(e)}",
+                "fault_code"   : e.faultCode,
+                "fault_string" : e.faultString
+            })
+
+
+    ### *Traer productos a partir de la catedoría o todos
+    def get_product_by_category(self, category):
+        #!Determinamos si existe conexión con odoo
+        if not self.models:
+            return ({
+                'status'  : 'error',
+                'message' : 'Error en la conexión con Odoo, no hay conexión Activa'
+            })
+
+        #Función try para traer productos a partir de la categoria dada
+        try: 
+            productsOdoo = self.models.execute_kw(
                 self.db, self.uid, self.password,
                 'product.product', 'search_read',
-                [domain],
-                {'fields': fields, 'limit': limit}
+                [[  ('categ_id.parent_id', 'ilike', category)  ]],
+                {  'fields' : ['id', 'name', 'default_code', 'qty_available', 'product_brand_id']  }
             )
-            return products
+
+            orderpoints = self.models.execute_kw(
+                self.db, self.uid, self.password,
+                'stock.warehouse.orderpoint', 'search_read',
+                [[]],
+                {  'fields' : ['product_id', 'product_min_qty', 'product_max_qty']  }
+            )
+
+            finalProducts = []
+
+            for product in productsOdoo:
+                productId = product['id']
+                points    = [op for op in orderpoints if op['product_id'][0] == productId]
+
+                minQty = points[0]['product_min_qty'] if points else 0
+                maxQty = points[0]['product_max_qty'] if points else 0
+
+                finalProducts.append({
+                    'id'               : productId,
+                    'name'             : product['name'],
+                    'sku'              : product['default_code'],
+                    'existenciaActual' : product['qty_available'],
+                    'minActual'        : minQty, 
+                    'maxActual'        : maxQty,
+                    'marca'            : product['product_brand_id']
+                }) 
+
+            return ({
+                'status'   : 'success',
+                'products' : finalProducts
+            })
+
         except xmlrpc.client.Fault as e:
-            print(f"Error al ejecutar la llamada a Odoo: {e}")
-            return None """
+            return ({
+                'status'       : 'error',
+                'message'      : f'Error al ejecutar la consulta a Odoo: {str(e)}',
+                'fault_code'   : e.faultCode,
+                'fault_string' : e.faultString,
+            })
 
-# --- CÓMO USAR LA CLASE ---
-if __name__ == "__main__":
-    try:
-        # 1. En cualquier parte de tu proyecto, solo necesitas crear una instancia.
-        print("Iniciando conexión...")
-        odoo_conn = OdooAPI()
+    ### *Traer todos los insumos de los productos y las cantidades de cada uno de estos.
+    def getInsumoByProduct(self):
+        #!Determinamos que haya algna conexión con Odoo
+        if not self.models:
+            return ({
+                'status'  : 'error',
+                'message' : 'Error en la conexión con Odoo, no hay conexión Activa'
+            })
 
-        # 2. Ahora puedes usar el objeto para interactuar con Odoo.
-        #    La conexión ya está lista.
-        if odoo_conn.uid:
-            print("\nBuscando los 5 primeros productos...")
-            # Ejemplo: buscar productos que sean de tipo 'almacenable'
-            """ filtro_productos = [('type', '=', 'product')]
-            lista_productos = odoo_conn.search_read_products(domain=filtro_productos, limit=5)
-            
-            if lista_productos is not None:
-                print("Productos encontrados:")
-                for product in lista_productos:
-                    print(f"- ID: {product['id']}, Código: {product.get('default_code', 'N/A')}, Nombre: {product['name']}") """
+        #try para hacer las consultas en Odoo
+        try:
+            #mrp_boom es el modelo de insumos de producto
+            mrp_bom = self.models.execute_kw(
+                self.db, self.uid, self.password, 
+                'mrp.bom', 'search_read', 
+                [[]],
+                { 'fields' : ['id', 'product_tmpl_id'], 'limit': 1000 }
+            )
 
-    except (ValueError, ConnectionRefusedError, ConnectionError) as e:
-        print(f"No se pudo completar la operación. Error: {e}")
+            return ({
+                'status'  : 'success',
+                'message' : mrp_bom
+            })
+
+        except xmlrpc.client.Fault as e:
+            return ({
+                'status'       : 'error',
+                'message'      : f'Error al ejecutar la consulta a Odoo: {str(e)}',
+                'fault_code'   : e.faultCode,
+                'fault_string' : e.faultString,
+            })

@@ -17,6 +17,30 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+#rutas agregadas
+from Unidades.Produccion_Logistica.maxMin.dataMaxMin import hello, get_sales_by_product
+from modelosBd.productos.views import pullProductsOdoo, getProductsPSQL
+from modelosBd.insumos.views import pullInsumosOdoo, getInsumosPSQL
+from modelosBd.materialPI.views import getMaterialsPIPSQL, pullMaterialPi
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    #!Ruta de prueba
+    path('hello/', hello),
+
+    #!Rutas Sales by Product
+    path('getSalesByProduct/', get_sales_by_product),
+
+    #!Rutas de productos
+    path('getProducts/', getProductsPSQL),
+    path('pullProductsOdoo/', pullProductsOdoo),
+
+    #!Rutas de Insumos
+    path('getInsumos/', getInsumosPSQL),
+    path('pullInsumosOdoo/', pullInsumosOdoo),
+
+    #!Rutas para MaterialesPI
+    path('getMaterials/', getMaterialsPIPSQL),
+    path('pullMaterialPI/', pullMaterialPi),
 ]
