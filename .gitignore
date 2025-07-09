@@ -2,6 +2,7 @@
 autoDjango/
 env/
 .venv/
+.autoenv/
 
 # Archivos de Bytecode y Cache de Python
 __pycache__/
