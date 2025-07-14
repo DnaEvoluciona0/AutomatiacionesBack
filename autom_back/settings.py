@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from modelosBd import productos, insumos
+import dotenv
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,6 +30,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Establecer variables de la base de datos
+dotenv.load_dotenv()
+usernamebd=os.getenv("USUARIOBD")
+basedatos=os.getenv("BASEDATOS")
+passwordbd=os.getenv("PASSWORDBD")
+puertobd=os.getenv("PUERTOBD")
 
 # Application definition
 
@@ -41,6 +49,9 @@ INSTALLED_APPS = [
     'modelosBd.productos', 
     'modelosBd.insumos',
     'modelosBd.materialPI',
+    'modelosBd.clientes',
+    'modelosBd.ventas',
+    'modelosBd.ventasPV',
 ]
 
 MIDDLEWARE = [
@@ -79,11 +90,17 @@ WSGI_APPLICATION = 'autom_back.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE' : 'django.db.backends.postgresql',
+<<<<<<< HEAD
         'NAME' : 'bd_automatizaciones',
         'USER' : 'postgres',
         'PASSWORD' : 'dg.web',
+=======
+        'NAME' : basedatos,
+        'USER' : usernamebd,
+        'PASSWORD' : passwordbd,
+>>>>>>> 798a6546671ab847a366075879165a691a0e2739
         'HOST' : 'localhost',
-        'PORT' : '5432'
+        'PORT' : puertobd
     }
 }
 

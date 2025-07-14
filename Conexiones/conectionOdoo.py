@@ -215,3 +215,98 @@ class OdooAPI:
                 'fault_code'   : e.faultCode,
                 'fault_string' : e.faultString,
             })
+            
+              
+    ### *Traer todos los clientes que hay en Odoo
+    def get_allClients(self):
+        #!Determinamos que haya algna conexión con Odoo
+        if not self.models:
+            return ({
+                'status'  : 'error',
+                'message' : 'Error en la conexión con Odoo, no hay conexión Activa'
+            })
+        #try para hacer las consultas en Odoo
+        #!Agregar el filtro de fechas xd
+        try:
+            res_partner = self.models.execute_kw(
+                self.db, self.uid, self.password, 
+                'res.partner', 'search_read', 
+                [[['sale_order_ids', '!=', False]]],
+                { 'fields' : ['name', 'city', 'state_id', 'country_id', 'sale_order_count']}
+            )
+            
+            return ({
+                'status'  : 'success',
+                'clientes' : res_partner
+            })
+            
+        except xmlrpc.client.Fault as e:
+            return ({
+                'status'       : 'error',
+                'message'      : f'Error al ejecutar la consulta a Odoo: {str(e)}',
+                'fault_code'   : e.faultCode,
+                'fault_string' : e.faultString,
+            })
+            
+    ### *Traer todos las ventas completadas
+    def get_allSales(self):
+        #!Determinamos que haya algna conexión con Odoo
+        if not self.models:
+            return ({
+                'status'  : 'error',
+                'message' : 'Error en la conexión con Odoo, no hay conexión Activa'
+            })
+        #try para hacer las consultas en Odoo
+        #!Agregar el filtro de fechas
+        try:
+            
+            order_sale = self.models.execute_kw(
+                self.db, self.uid, self.password, 
+                'account.move', 'search_read', 
+                [[['state', '=', 'posted'], ['move_type', '=', 'out_invoice'], ['branch_id', 'not ilike', 'STUDIO'], ['branch_id', 'not ilike', 'TORRE'], '|', '|', ['name', 'ilike', 'INV/'], ['name', 'ilike', 'MUEST/'], ['name', 'ilike', 'BONIF/']]],
+                { 'fields' : ['name', 'invoice_date', 'partner_id', 'invoice_user_id', 'partner_shipping_id', 'branch_id', 'amount_total_signed']}
+            )
+        
+            print(len(order_sale))
+            
+            index=0
+            for order in order_sale:
+                index=index+1
+                print(f"orden: {index}")
+                # *Traemos los producto ordenados
+                productos = self.models.execute_kw(
+                    self.db, self.uid, self.password, 
+                    'account.move.line', 'search_read', 
+                    [[['move_id', '=', order['id']], ['display_type', '=', 'product']]],
+                    { 'fields' :['product_id', 'quantity', 'price_unit', 'price_subtotal']}
+                )
+                order['productsLines']=productos
+                
+                # *Traemos la dirección de a donde es el envio
+                direccion = self.models.execute_kw(
+                    self.db, self.uid, self.password, 
+                    'res.partner', 'search_read', 
+                    [[['id', '=', order['partner_shipping_id'][0]]]],
+                    { 'fields' : ['city', 'state_id', 'country_id',]}
+                )
+                if direccion != []:
+                    order['country_id']= direccion[0]['country_id'][1] if direccion[0]['country_id'] != False else ""
+                    order['state_id']=direccion[0]['state_id'][1] if direccion[0]['state_id'] != False else ""
+                    order['city']=direccion[0]['city'] if direccion[0]['city'] != False else ""
+                else:
+                    order['country_id']=""
+                    order['state_id']=""
+                    order['city']=""
+            
+            return ({
+                'status'  : 'success',
+                'ventas' : order_sale
+            })
+            
+        except xmlrpc.client.Fault as e:
+            return ({
+                'status'       : 'error',
+                'message'      : f'Error al ejecutar la consulta a Odoo: {str(e)}',
+                'fault_code'   : e.faultCode,
+                'fault_string' : e.faultString,
+            })
