@@ -31,6 +31,12 @@ def pullInsumosOdoo(request):
                 if insumo['sku']:
                     sku = insumo.get('sku', '').strip()
                     marca = insumo.get('marca')
+                    categoria = insumo.get('categoria')
+                    if "MAQUILA" in categoria[1]: 
+                        tipo = "MAQUILAS"
+                    else:
+                        tipo = "INTERNO"
+                    
                     if sku and sku not in insumosPSQL:
                         new_insumos.append({
                             'id' : insumo.get('id')
@@ -43,7 +49,9 @@ def pullInsumosOdoo(request):
                             maxActual = insumo.get('maxActual'),
                             minActual = insumo.get('minActual'),
                             existenciaActual = insumo.get('existenciaActual'),
-                            marca = marca[1]
+                            marca = marca[1],
+                            categoria = categoria[1],
+                            tipoInsumo = tipo
                         )
             
             return JsonResponse({

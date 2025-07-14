@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 
 #rutas agregadas
-from Unidades.Produccion_Logistica.maxMin.dataMaxMin import hello, get_sales_by_product
+from Unidades.Produccion_Logistica.maxMin.dataMaxMin import hello, get_sales_by_product, updateMinMax
 from modelosBd.productos.views import pullProductsOdoo, getProductsPSQL
 from modelosBd.insumos.views import pullInsumosOdoo, getInsumosPSQL
 from modelosBd.materialPI.views import getMaterialsPIPSQL, pullMaterialPi
@@ -28,6 +28,9 @@ urlpatterns = [
 
     #!Ruta de prueba
     path('hello/', hello),
+
+    #!Rutas Actualizar Max y Min Insumos
+    path('updatemaxmin/', updateMinMax),
 
     #!Rutas Sales by Product
     path('getSalesByProduct/', get_sales_by_product),

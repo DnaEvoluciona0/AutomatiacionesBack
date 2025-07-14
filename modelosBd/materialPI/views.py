@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from modelosBd.materialPI.models import MaterialPI
+from modelosBd.productos.models import Productos
+from modelosBd.insumos.models import Insumos
 from Conexiones.conectionOdoo import OdooAPI
 
 # Create your views here.
@@ -20,8 +22,50 @@ def pullMaterialPi(request):
 
     try:
         result = conOdoo.getInsumoByProduct()
-        return JsonResponse(result)
 
+
+        if result['status'] == 'success':
+
+            materialesPIPSQL = MaterialPI.objects.all().values_list('producto', 'insumo', flat=False)
+
+            cantidad = 0
+            for material in result['message']:
+                productSKU = material.get('product')[1].split(']')[0]
+                productSKU = productSKU.split('[')[1]
+                materialSKU = material.get('material')[1].split(']')[0]
+                materialSKU = materialSKU.split('[')[1]
+
+                try: 
+                    instanceProduct = Productos.objects.get(sku=f'{productSKU}')
+                    
+                except Productos.DoesNotExist:
+                    continue
+
+                try:
+                    instanceInsumo = Insumos.objects.get(sku=f'{materialSKU}')
+                except Insumos.DoesNotExist:
+                    continue
+
+                tupleMaterial = (Productos.objects.only('id').get(sku=productSKU).id, material.get('material')[0])
+
+                if tupleMaterial and tupleMaterial not in materialesPIPSQL:
+                
+                    if instanceProduct and instanceInsumo:
+                        cantidad += 1
+                        materialPI = MaterialPI.objects.create(
+                            producto = instanceProduct,
+                            insumo = instanceInsumo,
+                            cantidad = material.get('qty')
+                        )
+
+            return JsonResponse({
+                'status' : 'success',
+                'message' : f'Se han cargado {cantidad} materiales de productos.'
+            })
+        return JsonResponse({
+            'status'  : 'error',
+            'message' : result['message']
+        })
 
     except Exception as e:
         return JsonResponse({
