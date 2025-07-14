@@ -22,6 +22,8 @@ from Unidades.Produccion_Logistica.maxMin.dataMaxMin import hello, get_sales_by_
 from modelosBd.productos.views import pullProductsOdoo, getProductsPSQL
 from modelosBd.insumos.views import pullInsumosOdoo, getInsumosPSQL
 from modelosBd.materialPI.views import getMaterialsPIPSQL, pullMaterialPi
+from modelosBd.clientes.views import pullClientesOdoo
+from modelosBd.ventas.views import pullVentasOdoo
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -43,4 +45,10 @@ urlpatterns = [
     #!Rutas para MaterialesPI
     path('getMaterials/', getMaterialsPIPSQL),
     path('pullMaterialPI/', pullMaterialPi),
+    
+    #!Rutas para Clientes
+    path('pullClientes/', pullClientesOdoo),
+    
+    #!Rutas para Clientes
+    path('pullVentas/', pullVentasOdoo)
 ]

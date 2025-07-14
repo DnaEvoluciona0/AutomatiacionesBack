@@ -10,11 +10,12 @@ class Migration(migrations.Migration):
     dependencies = [
         ("insumos", "0001_initial"),
         ("productos", "0001_initial"),
+        ("ventas", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="MaterialPI",
+            name="VentasPV",
             fields=[
                 (
                     "id",
@@ -25,19 +26,36 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("cantidad", models.IntegerField()),
+                ("cantidad", models.BigIntegerField()),
                 (
-                    "insumo",
+                    "precioUnitario",
+                    models.DecimalField(decimal_places=2, max_digits=20),
+                ),
+                ("subtotal", models.DecimalField(decimal_places=2, max_digits=20)),
+                (
+                    "idInsumo",
                     models.ForeignKey(
+                        null=True,
                         on_delete=django.db.models.deletion.CASCADE,
+                        related_name="ventasPVInsumos",
                         to="insumos.insumos",
                     ),
                 ),
                 (
-                    "producto",
+                    "idProducto",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="ventasPVProducto",
+                        to="productos.productos",
+                    ),
+                ),
+                (
+                    "idVenta",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="productos.productos",
+                        related_name="ventasPVVenta",
+                        to="ventas.ventas",
                     ),
                 ),
             ],
