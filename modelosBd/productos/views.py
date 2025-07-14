@@ -28,34 +28,36 @@ def pullProductsOdoo(request):
                 #añadir los productos a la base de datos de PostgreSQL
                 new_products = []
                 for product in products['products']:
-                    if product['sku']: 
-                        sku = product.get('sku', '').strip()
-                        marca = product.get('marca')
-                        categoria = product.get('categoria')
-                        if "MAQUILAS" in categoria[1] or "MT" in sku: 
-                            tipo = "MAQUILAS"
-                        elif "PC" in sku:
-                            tipo = "PRODUCTO COMERCIAL"
-                        else:
-                            tipo = "INTERNO"
+                    
+                    sku = product.get('sku', '').strip() if product['sku'] else ""
+                    marca = product.get('marca')
+                    categoria = product.get('categoria')
+                    if "MAQUILAS" in categoria[1] or "MT" in sku: 
+                        tipo = "MAQUILAS"
+                    elif "PC" in sku:
+                        tipo = "PRODUCTO COMERCIAL"
+                    elif "PT" in sku:
+                        tipo = "INTERNO"
+                    else:
+                        tipo = "OTROS"
                         
 
-                        if sku and sku not in productsPSQL:
-                            new_products.append({
-                                'id' : product.get('id')
-                            })
-                            createProduct = Productos.objects.create(
-                                id = product.get('id'),
-                                sku = sku,
-                                nombre = product.get('name'),
-                                maxActual = product.get('maxActual'),
-                                minActual = product.get('minActual'),
-                                existenciaActual =  product.get('existenciaActual'),
-                                marca = marca[1],
-                                categoria = categoria[1],
-                                tipoProducto = tipo, 
-                                precio = product.get('precio')
-                            )
+                    if sku not in productsPSQL:
+                        new_products.append({
+                            'id' : product.get('id')
+                        })
+                        createProduct = Productos.objects.create(
+                            id = product.get('id'),
+                            sku = sku,
+                            nombre = product.get('name'),
+                            maxActual = product.get('maxActual'),
+                            minActual = product.get('minActual'),
+                            existenciaActual =  product.get('existenciaActual'),
+                            marca = marca[1] if marca else "",
+                            categoria = categoria[1],
+                            tipoProducto = tipo, 
+                            precio = product.get('precio')
+                        )
 
                 return ({
                     'status'  : 'success',
@@ -69,15 +71,15 @@ def pullProductsOdoo(request):
                 })
 
         #Traer los productos que existen de odoo
-        productsTOdoo = conOdoo.get_product_by_category(category= "PRODUCTO TERMINADO")
-        productsCOdoo = conOdoo.get_product_by_category(category= "PRODUCTO COMERCIAL")
+        productsTOdoo = conOdoo.get_product_by_category(category="")
+        #productsCOdoo = conOdoo.get_product_by_category(category= "PRODUCTO COMERCIAL")
 
         response1 = insertProducts(productsTOdoo)
-        response2 = insertProducts(productsCOdoo)
+        #response2 = insertProducts(productsCOdoo)
 
-        if response1['status'] == "success" and response2['status'] == 'success':
+        if response1['status'] == "success":
 
-            totalRows = response1['message'] + response2['message']
+            totalRows = response1['message']
             return JsonResponse({
                 'status'  : 'success',
                 'message' : f'Se han agregado correctamente {totalRows} datos'

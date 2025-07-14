@@ -128,12 +128,24 @@ class OdooAPI:
                 'message' : 'Error en la conexión con Odoo, no hay conexión Activa'
             })
 
+        if category == "INSUMO":
+            validacion1 = ('categ_id', 'ilike', 'INSUMO')
+        else: 
+            validacion1 = ('categ_id', 'not ilike', 'INSUMO')
+
         #Función try para traer productos a partir de la categoria dada
         try: 
             productsOdoo = self.models.execute_kw(
                 self.db, self.uid, self.password,
                 'product.product', 'search_read',
-                [[  ('categ_id.parent_id', 'ilike', category)  ]],
+                [[  '&',
+                    validacion1,
+                    ('categ_id.parent_id', 'not ilike', 'AGENCIA DIGITAL'),
+                    ('default_code', 'not ilike', 'STUDIO'),
+                    ('default_code', 'not ilike', 'T-S'),
+                    ('default_code', 'not ilike', 'T-T'),
+
+                ]],
                 {  'fields' : ['id', 'name', 'default_code', 'qty_available', 'product_brand_id', 'categ_id', 'list_price']  }
             )
 
@@ -146,6 +158,7 @@ class OdooAPI:
 
             finalProducts = []
 
+            
             for product in productsOdoo:
                 productId = product['id']
                 points    = [op for op in orderpoints if op['product_id'][0] == productId]

@@ -90,15 +90,9 @@ WSGI_APPLICATION = 'autom_back.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE' : 'django.db.backends.postgresql',
-<<<<<<< HEAD
-        'NAME' : 'bd_automatizaciones',
-        'USER' : 'postgres',
-        'PASSWORD' : 'dg.web',
-=======
         'NAME' : basedatos,
         'USER' : usernamebd,
         'PASSWORD' : passwordbd,
->>>>>>> 798a6546671ab847a366075879165a691a0e2739
         'HOST' : 'localhost',
         'PORT' : puertobd
     }
