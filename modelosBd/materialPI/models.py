@@ -6,7 +6,7 @@ from modelosBd.insumos.models import Insumos
 class MaterialPI(models.Model):
     producto = models.ForeignKey(Productos, on_delete=models.CASCADE)
     insumo = models.ForeignKey(Insumos, on_delete=models.CASCADE)
-    cantidad = models.IntegerField()
+    cantidad = models.FloatField()
 
     class Meya:
         unique_together = ('producto', 'insumo')

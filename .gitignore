@@ -33,4 +33,13 @@ logs/
 Thumbs.db
 
 # Archivos de testing
+<<<<<<< HEAD
 .coverage
+
+#! Esto es un segundo comentari
+
+##holas desde javi
+
+=======
+.coverage
+>>>>>>> 798a6546671ab847a366075879165a691a0e2739

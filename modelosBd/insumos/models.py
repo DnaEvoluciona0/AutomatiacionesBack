@@ -8,3 +8,5 @@ class Insumos(models.Model):
     maxActual = models.IntegerField()
     minActual = models.IntegerField()
     existenciaActual =  models.IntegerField(default=0)
+    categoria = models.CharField(max_length=150, default='')
+    tipoInsumo = models.CharField(max_length=100, default='')

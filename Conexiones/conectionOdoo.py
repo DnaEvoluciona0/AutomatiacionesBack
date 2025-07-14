@@ -128,13 +128,25 @@ class OdooAPI:
                 'message' : 'Error en la conexión con Odoo, no hay conexión Activa'
             })
 
+        if category == "INSUMO":
+            validacion1 = ('categ_id', 'ilike', 'INSUMO')
+        else: 
+            validacion1 = ('categ_id', 'not ilike', 'INSUMO')
+
         #Función try para traer productos a partir de la categoria dada
         try: 
             productsOdoo = self.models.execute_kw(
                 self.db, self.uid, self.password,
                 'product.product', 'search_read',
-                [[  ('categ_id.parent_id', 'ilike', category)  ]],
-                {  'fields' : ['id', 'name', 'default_code', 'qty_available', 'product_brand_id']  }
+                [[  '&',
+                    validacion1,
+                    ('categ_id.parent_id', 'not ilike', 'AGENCIA DIGITAL'),
+                    ('default_code', 'not ilike', 'STUDIO'),
+                    ('default_code', 'not ilike', 'T-S'),
+                    ('default_code', 'not ilike', 'T-T'),
+
+                ]],
+                {  'fields' : ['id', 'name', 'default_code', 'qty_available', 'product_brand_id', 'categ_id', 'list_price']  }
             )
 
             orderpoints = self.models.execute_kw(
@@ -146,6 +158,7 @@ class OdooAPI:
 
             finalProducts = []
 
+            
             for product in productsOdoo:
                 productId = product['id']
                 points    = [op for op in orderpoints if op['product_id'][0] == productId]
@@ -160,9 +173,10 @@ class OdooAPI:
                     'existenciaActual' : product['qty_available'],
                     'minActual'        : minQty, 
                     'maxActual'        : maxQty,
-                    'marca'            : product['product_brand_id']
+                    'marca'            : product['product_brand_id'],
+                    'categoria'        : product['categ_id'],
+                    'precio'           : product['list_price']
                 }) 
-
             return ({
                 'status'   : 'success',
                 'products' : finalProducts
@@ -185,19 +199,26 @@ class OdooAPI:
                 'message' : 'Error en la conexión con Odoo, no hay conexión Activa'
             })
 
-        #try para hacer las consultas en Odoo
+        #try para hacer las consultas en Odoo Trae todos las combinaciones entre productos
         try:
-            #mrp_boom es el modelo de insumos de producto
-            mrp_bom = self.models.execute_kw(
-                self.db, self.uid, self.password, 
-                'mrp.bom', 'search_read', 
+            finalMaterials = []
+            mrp_bom_line = self.models.execute_kw(
+                self.db, self.uid, self.password,
+                'mrp.bom.line', 'search_read',
                 [[]],
-                { 'fields' : ['id', 'product_tmpl_id'], 'limit': 1000 }
+                {  'fields' : ['product_id', 'product_qty', 'bom_id']  }
             )
+
+            for item in mrp_bom_line:
+                finalMaterials.append({
+                    'product'  : item['bom_id'],
+                    'material' : item['product_id'],
+                    'qty'      : item['product_qty'],
+                }) 
 
             return ({
                 'status'  : 'success',
-                'message' : mrp_bom
+                'message' : finalMaterials
             })
 
         except xmlrpc.client.Fault as e:
