@@ -240,7 +240,7 @@ class OdooAPI:
                 'fault_string' : e.faultString,
             })
             
-    ### *Traer todos las ventas completadas
+    ### *Traer todos las ventas completadas y notas de credito
     def get_allSales(self):
         #!Determinamos que haya algna conexión con Odoo
         if not self.models:
@@ -255,16 +255,14 @@ class OdooAPI:
             order_sale = self.models.execute_kw(
                 self.db, self.uid, self.password, 
                 'account.move', 'search_read', 
-                [[['state', '=', 'posted'], ['move_type', '=', 'out_invoice'], ['branch_id', 'not ilike', 'STUDIO'], ['branch_id', 'not ilike', 'TORRE'], '|', '|', ['name', 'ilike', 'INV/'], ['name', 'ilike', 'MUEST/'], ['name', 'ilike', 'BONIF/']]],
-                { 'fields' : ['name', 'invoice_date', 'partner_id', 'invoice_user_id', 'partner_shipping_id', 'branch_id', 'amount_total_signed']}
+                [[['state', '=', 'posted'], '|', ['move_type', '=', 'out_invoice'], ['move_type', '=', 'out_refund'], ['branch_id', 'not ilike', 'STUDIO'], ['branch_id', 'not ilike', 'TORRE'], '|', '|', ['name', 'ilike', 'INV/'], ['name', 'ilike', 'MUEST/'], ['name', 'ilike', 'BONIF/']]],
+                { 'fields' : ['name', 'invoice_date', 'partner_id', 'invoice_user_id', 'partner_shipping_id', 'branch_id', 'amount_total_signed', 'move_type'], 'limit': 1}
             )
-        
-            print(len(order_sale))
             
-            index=0
+            print(len(order_sale))
+            print(order_sale[0])
+            
             for order in order_sale:
-                index=index+1
-                print(f"orden: {index}")
                 # *Traemos los producto ordenados
                 productos = self.models.execute_kw(
                     self.db, self.uid, self.password, 
