@@ -10,4 +10,3 @@ class Productos(models.Model):
     existenciaActual =  models.IntegerField(default=0)
     categoria = models.CharField(max_length=150, default='')
     tipoProducto = models.CharField(max_length=100, default='')
-    precio = models.FloatField(default=0)

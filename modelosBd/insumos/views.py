@@ -32,15 +32,20 @@ def pullInsumosOdoo(request):
                     sku = insumo.get('sku', '').strip()
                     marca = insumo.get('marca')
                     categoria = insumo.get('categoria')
-                    if "MAQUILA" in categoria[1]: 
-                        tipo = "MAQUILAS"
-                    else:
-                        tipo = "INTERNO"
                     
                     if sku and sku not in insumosPSQL:
                         new_insumos.append({
                             'id' : insumo.get('id')
                         })
+
+                        provider = len(insumo.get('proveedor'))
+                        
+                        if provider > 0:
+                            proveedor = insumo.get('proveedor')
+                            proveedorFinal = proveedor[0]['partner_id'][1]
+                        else:
+                            proveedorFinal = ""
+                        #print(insumo)
 
                         createInsumo = Insumos.objects.create(
                             id = insumo.get('id'),
@@ -51,7 +56,7 @@ def pullInsumosOdoo(request):
                             existenciaActual = insumo.get('existenciaActual'),
                             marca = marca[1],
                             categoria = categoria[1],
-                            tipoInsumo = tipo
+                            proveedor = proveedorFinal,
                         )
             
             return JsonResponse({

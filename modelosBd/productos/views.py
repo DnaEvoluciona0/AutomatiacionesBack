@@ -32,12 +32,16 @@ def pullProductsOdoo(request):
                     sku = product.get('sku', '').strip() if product['sku'] else ""
                     marca = product.get('marca')
                     categoria = product.get('categoria')
+                    rutas = len(product.get('routes'))
+
                     if "MAQUILAS" in categoria[1] or "MT" in sku: 
                         tipo = "MAQUILAS"
                     elif "PC" in sku:
                         tipo = "PRODUCTO COMERCIAL"
-                    elif "PT" in sku:
-                        tipo = "INTERNO"
+                    elif "PT" in sku and rutas > 0:
+                        tipo = "INTERNO RESURTIBLE"
+                    elif "PT" in sku and rutas == 0:
+                        tipo = "INTERNO NO RESURTIBLE"
                     else:
                         tipo = "OTROS"
                         
@@ -55,8 +59,7 @@ def pullProductsOdoo(request):
                             existenciaActual =  product.get('existenciaActual'),
                             marca = marca[1] if marca else "",
                             categoria = categoria[1],
-                            tipoProducto = tipo, 
-                            precio = product.get('precio')
+                            tipoProducto = tipo
                         )
 
                 return ({

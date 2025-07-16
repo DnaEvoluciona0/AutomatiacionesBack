@@ -132,7 +132,6 @@ class OdooAPI:
             validacion1 = ('categ_id', 'ilike', 'INSUMO')
         else: 
             validacion1 = ('categ_id', 'not ilike', 'INSUMO')
-
         #Función try para traer productos a partir de la categoria dada
         try: 
             productsOdoo = self.models.execute_kw(
@@ -140,13 +139,15 @@ class OdooAPI:
                 'product.product', 'search_read',
                 [[  '&',
                     validacion1,
+                    #('purchase_ok', '=', 'TRUE'),
+                    #('default_code', '=', 'IZLM03ET'),
                     ('categ_id.parent_id', 'not ilike', 'AGENCIA DIGITAL'),
                     ('default_code', 'not ilike', 'STUDIO'),
                     ('default_code', 'not ilike', 'T-S'),
                     ('default_code', 'not ilike', 'T-T'),
 
                 ]],
-                {  'fields' : ['id', 'name', 'default_code', 'qty_available', 'product_brand_id', 'categ_id', 'list_price']  }
+                {  'fields' : ['id', 'name', 'default_code', 'qty_available', 'product_brand_id', 'categ_id', 'route_ids'] }
             )
 
             orderpoints = self.models.execute_kw(
@@ -156,16 +157,27 @@ class OdooAPI:
                 {  'fields' : ['product_id', 'product_min_qty', 'product_max_qty']  }
             )
 
+            providers = self.models.execute_kw(
+                self.db, self.uid, self.password,
+                'product.supplierinfo', 'search_read',
+                [[]],
+                {  'fields' : ['product_tmpl_id', 'partner_id']  }
+            )
+
             finalProducts = []
 
+            #print(providers)
             
             for product in productsOdoo:
                 productId = product['id']
+                productName = product['name'] 
                 points    = [op for op in orderpoints if op['product_id'][0] == productId]
+                provider  = [pr for pr in providers   if productName in pr['product_tmpl_id'][1]] 
 
                 minQty = points[0]['product_min_qty'] if points else 0
                 maxQty = points[0]['product_max_qty'] if points else 0
 
+                
                 finalProducts.append({
                     'id'               : productId,
                     'name'             : product['name'],
@@ -175,7 +187,8 @@ class OdooAPI:
                     'maxActual'        : maxQty,
                     'marca'            : product['product_brand_id'],
                     'categoria'        : product['categ_id'],
-                    'precio'           : product['list_price']
+                    'routes'           : product['route_ids'],
+                    'proveedor'        : provider
                 }) 
             return ({
                 'status'   : 'success',

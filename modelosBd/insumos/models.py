@@ -9,4 +9,4 @@ class Insumos(models.Model):
     minActual = models.IntegerField()
     existenciaActual =  models.IntegerField(default=0)
     categoria = models.CharField(max_length=150, default='')
-    tipoInsumo = models.CharField(max_length=100, default='')
+    proveedor = models.CharField(max_length=200, default="")
