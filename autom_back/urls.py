@@ -52,6 +52,6 @@ urlpatterns = [
     #!Rutas para Clientes
     path('pullClientes/', pullClientesOdoo),
     
-    #!Rutas para Clientes
+    #!Rutas para Ventas
     path('pullVentas/', pullVentasOdoo)
 ]

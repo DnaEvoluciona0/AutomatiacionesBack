@@ -18,46 +18,49 @@ def pullVentasOdoo(request):
             ventasPSQL = Ventas.objects.all().values_list('idVenta', flat=True)
        
             newVentas = 0
+            newNota = 0
+            
+            registroVentas=[]
             
             for venta in clientesOdoo['ventas']:
                 try:
                     if venta['name'] not in ventasPSQL:
-                        print(venta)
-                        if venta['branch_id']!=False:
-                            #Asignamos la distribución de la información en sus respectivas variables
-                        
-                            Ventas.objects.create(
-                                idVenta         = venta['name'],
-                                fecha           = venta['invoice_date'],
-                                ciudadVenta     = venta['city'],
-                                estadoVenta     = venta['state_id'],
-                                paisVenta       = venta['country_id'],
-                                unidad          = venta['branch_id'][1],
-                                vendedor        = venta['invoice_user_id'][1],
-                                total           = venta['amount_total_signed'],
-                                idCliente_id    = venta['partner_id'][0]
-                            )
+                        if any(line.get('product_id') is False for line in venta['productsLines']):
+                            pass
                         else:
+                            if venta['move_type'] == 'out_invoice':
+                                newVentas=newVentas+1
+                            if venta['move_type'] == 'out_refund':
+                                newNota=newNota+1
+                                #Asignamos la distribución de la información en sus respectivas variables
                             Ventas.objects.create(
                                 idVenta         = venta['name'],
                                 fecha           = venta['invoice_date'],
                                 ciudadVenta     = venta['city'],
                                 estadoVenta     = venta['state_id'],
                                 paisVenta       = venta['country_id'],
-                                unidad          = "",
+                                unidad          = venta['branch_id'][1] if venta['branch_id'] else "",
                                 vendedor        = venta['invoice_user_id'][1],
                                 total           = venta['amount_total_signed'],
                                 idCliente_id    = venta['partner_id'][0]
                             )
-                        pullLineaVentaOdoo(venta['productsLines'], venta['name'])
-                        newVentas=newVentas+1
+                                
+                            pullventas=pullLineaVentaOdoo(venta['productsLines'], venta['name'], venta['invoice_date'])
+                            if pullventas['status'] == "error":
+                                return JsonResponse({
+                                        'status': 'error',
+                                        'message': f"{pullventas['message']}, {venta}"
+                                    })
                             
-                except:
-                    print(venta)
+                except Exception as e:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Error registrando ventas: {e}'
+                    })
         
             return JsonResponse({
                 'status'  : 'success',
-                'message' : f'{newVentas} ventas nuevas'
+                'message' : f'{newVentas} ventas nuevas y {newNota} nuevas notas de credito'
             })    
         
         else:
@@ -69,5 +72,5 @@ def pullVentasOdoo(request):
     except Exception as e:
         return JsonResponse({
             'status'  : 'error',
-            'message' : f'Ha ocurrido un error al tratar de insertar los datos en ventas: {e}'
+            'message' : f'Ha ocurrido un error en pull Ventas: {e}'
         })
