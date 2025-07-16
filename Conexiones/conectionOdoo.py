@@ -244,7 +244,7 @@ class OdooAPI:
             res_partner = self.models.execute_kw(
                 self.db, self.uid, self.password, 
                 'res.partner', 'search_read', 
-                [[['sale_order_ids', '!=', False]]],
+                [[['invoice_ids', '!=', False], '|', ['active', '=', True], ['active', '=', False]]],
                 { 'fields' : ['name', 'city', 'state_id', 'country_id', 'sale_order_count']}
             )
             
@@ -277,19 +277,21 @@ class OdooAPI:
                 self.db, self.uid, self.password, 
                 'account.move', 'search_read', 
                 [[['state', '=', 'posted'], '|', ['move_type', '=', 'out_invoice'], ['move_type', '=', 'out_refund'], ['branch_id', 'not ilike', 'STUDIO'], ['branch_id', 'not ilike', 'TORRE'], '|', '|', ['name', 'ilike', 'INV/'], ['name', 'ilike', 'MUEST/'], ['name', 'ilike', 'BONIF/']]],
-                { 'fields' : ['name', 'invoice_date', 'partner_id', 'invoice_user_id', 'partner_shipping_id', 'branch_id', 'amount_total_signed', 'move_type'], 'limit': 1}
+                { 'fields' : ['name', 'invoice_date', 'partner_id', 'invoice_user_id', 'partner_shipping_id', 'branch_id', 'amount_total_signed', 'move_type'] }
             )
             
             print(len(order_sale))
-            print(order_sale[0])
+            index=0
             
             for order in order_sale:
+                index=index+1
+                print(index)
                 # *Traemos los producto ordenados
                 productos = self.models.execute_kw(
                     self.db, self.uid, self.password, 
                     'account.move.line', 'search_read', 
                     [[['move_id', '=', order['id']], ['display_type', '=', 'product']]],
-                    { 'fields' :['product_id', 'quantity', 'price_unit', 'price_subtotal']}
+                    { 'fields' :['name', 'product_id', 'quantity', 'price_unit', 'price_subtotal', 'x_studio_marca']}
                 )
                 order['productsLines']=productos
                 
