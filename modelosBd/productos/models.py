@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import datetime
 
 # Create your models here.
 class Productos(models.Model):
@@ -10,3 +11,9 @@ class Productos(models.Model):
     existenciaActual =  models.IntegerField(default=0)
     categoria = models.CharField(max_length=150, default='')
     tipoProducto = models.CharField(max_length=100, default='')
+    fechaCreacion = models.DateTimeField(default=datetime.now)
+    
+
+
+
+    
