@@ -22,8 +22,9 @@ from Unidades.Produccion_Logistica.maxMin.dataMaxMin import hello, get_sales_by_
 from modelosBd.productos.views import pullProductsOdoo, getProductsPSQL
 from modelosBd.insumos.views import pullInsumosOdoo, getInsumosPSQL
 from modelosBd.materialPI.views import getMaterialsPIPSQL, pullMaterialPi
-from modelosBd.clientes.views import pullClientesOdoo
-from modelosBd.ventas.views import pullVentasOdoo
+from modelosBd.clientes.views import *
+from modelosBd.ventas.views import *
+from modelosBd.caducidades.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -50,8 +51,22 @@ urlpatterns = [
     path('pullMaterialPI/', pullMaterialPi),
     
     #!Rutas para Clientes
-    path('pullClientes/', pullClientesOdoo),
+    path('getClientes/', getClientesPSQL),  #Obtener todo los registros de la BASE DE DATOS
+    path('pullClientes/', pullClientesOdoo), #Obtener todo los registros de ODOO y enviarlos a BASE DE DATOS
+    path('createClientes/', createClientesOdoo), #Crear todos los nuevos clientes de ODOO y enviarlos a BASE DE DATOS
+    path('createClientesExcel/', createClientesExcel), #? En uso
+    path('updateClientes/', updateClientesOdoo), #Actualizar todos las modificaciones de ODOO y enviarlos a BASE DE DATOS
+    path('deleteClientes/', deleteClientesPSQL), #Cambiar el status de un cliente ODOO a 0 en la BASE DE DATOS
     
     #!Rutas para Ventas
-    path('pullVentas/', pullVentasOdoo)
+    path('getVentas/', getVentasPSQL), #? No en uso
+    path('pullVentas/', pullVentasOdoo), #? En uso
+    path('createVentas/', createVentasOdoo), #? En uso
+    path('createVentasExcel/', createSalesExcel), #? En uso
+    path('updateVentas/', updateVentasOdoo), #? No en uso
+    path('deleteVentas/', deleteVentasPSQL), #? No en uso
+    
+    #!Rutas para BajaRotación
+    path('pullCaducidades/', pullCaducidadesOdoo)
+    
 ]

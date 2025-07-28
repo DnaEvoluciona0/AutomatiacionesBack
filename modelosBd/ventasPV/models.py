@@ -15,6 +15,7 @@ class VentasPVH(models.Model):
     nombre = models.CharField(max_length=100)
     sku = models.CharField(max_length=20)
     marca = models.CharField(max_length=50)
+    categoria = models.CharField(max_length=100, default="")
     cantidad = models.BigIntegerField()
     precioUnitario = models.DecimalField(decimal_places=2, max_digits=20)
     subtotal = models.DecimalField(decimal_places=2, max_digits=20)

@@ -2,7 +2,9 @@ from modelosBd.ventasPV.models import VentasPVH, VentasPVA
 from modelosBd.productos.models import Productos
 
 # Create your views here.
-# Create your views here.
+def getLineaVentaPSQL():
+    pass
+
 #? Consultas para conexión con Odoo
 def pullLineaVentaOdoo(productos, idVenta, fechaVenta):
     try:
@@ -31,6 +33,7 @@ def pullLineaVentaOdoo(productos, idVenta, fechaVenta):
                 precioUnitario  = producto['price_unit'],
                 subtotal        = producto['price_subtotal'],
                 marca           = producto['x_studio_marca'] if producto['x_studio_marca'] else "",
+                categoria       = producto['x_studio_related_field_e1jP7'] if producto['x_studio_related_field_e1jP7'] else "",
                 idVenta_id      = idVenta,
                 nombre          = nombreP,
                 sku             = skuP
@@ -45,3 +48,12 @@ def pullLineaVentaOdoo(productos, idVenta, fechaVenta):
             'status'  : 'error',
             'message' : f'Ha ocurrido un error al tratar de insertar los datos en ventasPV: {e}'
         })
+
+def createLineaVentaPSQL():
+    pass
+    
+def updateLineaVentaPSQL():
+    pass
+
+def deleteLineaVentaPSQL():
+    pass

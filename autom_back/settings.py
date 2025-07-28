@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'modelosBd.clientes',
     'modelosBd.ventas',
     'modelosBd.ventasPV',
+    'modelosBd.caducidades',
 ]
 
 MIDDLEWARE = [
