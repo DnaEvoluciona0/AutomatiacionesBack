@@ -19,8 +19,8 @@ from django.urls import path
 
 #rutas agregadas
 from Unidades.Produccion_Logistica.maxMin.dataMaxMin import updateMinMax
-from modelosBd.productos.views import pullProductsOdoo, getProductsPSQL, updateProducts, createProductsFromOdoo
-from modelosBd.insumos.views import pullInsumosOdoo, getInsumosPSQL, updateInsumosOdoo, createInsumosFromOdoo
+from modelosBd.productos.views import pullProductsOdoo, getProductsPSQL, updateProducts, createNewProductsFromOdoo
+from modelosBd.insumos.views import pullInsumosOdoo, getInsumosPSQL, updateInsumosOdoo, createNewInsumosFromOdoo
 from modelosBd.materialPI.views import getMaterialsPIPSQL, pullMaterialPi
 from modelosBd.clientes.views import *
 from modelosBd.ventas.views import *
@@ -36,13 +36,13 @@ urlpatterns = [
     path('getProducts/', getProductsPSQL),
     path('pullProductsOdoo/', pullProductsOdoo),
     path('updateProducts/', updateProducts),
-    path('createProductsOdoo/', createProductsFromOdoo),
+    path('createProductsOdoo/', createNewProductsFromOdoo),
 
     #!Rutas de Insumos
     path('getInsumos/', getInsumosPSQL),
     path('pullInsumosOdoo/', pullInsumosOdoo),
     path('updateInsumosOdoo/', updateInsumosOdoo),
-    path('createInsumosOdoo/', createInsumosFromOdoo),
+    path('createInsumosOdoo/', createNewInsumosFromOdoo),
 
     #!Rutas para MaterialesPI
     path('getMaterials/', getMaterialsPIPSQL),

@@ -7,7 +7,7 @@ from Conexiones.conectionOdoo import OdooAPI
 conOdoo = OdooAPI()
 
 # --------------------------------------------------------------------------------------------------
-# * Función: get_product_all_products
+# * Función: get_all_products
 # * Descripción: Obtiene todos los productos (que no sean insumos) de Odoo
 #
 # ! Parámetros:
@@ -30,7 +30,7 @@ conOdoo = OdooAPI()
 #       En caso de haber ocurrido algun error retorna un JSON con status error y el mensaje del error
 # --------------------------------------------------------------------------------------------------
 
-def get_product_all_products():
+def get_all_products():
     #!Determinamos si existe conexión con odoo
     if not conOdoo.models:
         return ({
@@ -39,7 +39,8 @@ def get_product_all_products():
         })
 
     #Función try para traer productos a partir de la categoria dada
-    try: 
+    try:
+        # Obtener todos los productos que cumplan con las condiciones 
         productsOdoo = conOdoo.models.execute_kw(
             conOdoo.db, conOdoo.uid, conOdoo.password,
             'product.product', 'search_read',
@@ -54,6 +55,7 @@ def get_product_all_products():
             {  'fields' : ['id', 'name', 'default_code', 'qty_available', 'product_brand_id', 'categ_id', 'route_ids', 'product_tmpl_id'] }
         )
 
+        # Obtener reglas de maximos y minimos
         orderpoints = conOdoo.models.execute_kw(
             conOdoo.db, conOdoo.uid, conOdoo.password,
             'stock.warehouse.orderpoint', 'search_read',
@@ -61,6 +63,7 @@ def get_product_all_products():
             {  'fields' : ['product_id', 'product_min_qty', 'product_max_qty']  }
         )
 
+        # Obtener fechas de creación
         productCreatedDate = conOdoo.models.execute_kw(
             conOdoo.db, conOdoo.uid, conOdoo.password,
             'product.template', 'search_read',
@@ -68,11 +71,10 @@ def get_product_all_products():
             {  'fields' : ['id', 'create_date']  }
         )
 
-        #print(productsOdoo)
-
         finalProducts = []
 
-        
+        # Por cada producto encontrado que cumpla las reglas, relaciona los valores con las 
+        # reglas de maximos y minimos (orderpoints) y las fechas de creación (productCreatedDate)
         for product in productsOdoo:
             productId    = product['id']
             idtemplate   = product['product_tmpl_id'][0]
@@ -95,6 +97,8 @@ def get_product_all_products():
                 'routes'           : product['route_ids'],
                 'fechaCreacion'    : createdDate
             }) 
+
+        # Retorna todos los productos encontrados
         return ({
             'status'   : 'success',
             'products' : finalProducts
@@ -145,10 +149,10 @@ def get_newproducts():
     try: 
         today     = datetime.now()
         yesterday = today - timedelta(days=1)
-
         dateStart = yesterday.strftime('%Y-%m-%d 00:00:00')
         dateEnd   = today.strftime('%Y-%m-%d 00:00:01')
 
+        # Obtiene todos los ids de los productos creados el día anterior
         productTemplateID = conOdoo.models.execute_kw(
             conOdoo.db, conOdoo.uid, conOdoo.password,
             'product.template', 'search',
@@ -158,6 +162,7 @@ def get_newproducts():
             ]],
         )
 
+        # Obtener todos los productos que cumplan con las condiciones
         productsOdoo = conOdoo.models.execute_kw(
             conOdoo.db, conOdoo.uid, conOdoo.password,
             'product.product', 'search_read',
@@ -172,6 +177,7 @@ def get_newproducts():
             {  'fields' : ['id', 'name', 'default_code', 'qty_available', 'product_brand_id', 'categ_id', 'route_ids', 'product_tmpl_id'] }
         )
 
+        # Obtener reglas de maximos y minimos
         orderpoints = conOdoo.models.execute_kw(
             conOdoo.db, conOdoo.uid, conOdoo.password,
             'stock.warehouse.orderpoint', 'search_read',
@@ -179,6 +185,7 @@ def get_newproducts():
             {  'fields' : ['product_id', 'product_min_qty', 'product_max_qty']  }
         )
 
+        # Obtener fechas de creación
         productCreatedDate = conOdoo.models.execute_kw(
             conOdoo.db, conOdoo.uid, conOdoo.password,
             'product.template', 'search_read',
@@ -188,6 +195,8 @@ def get_newproducts():
 
         finalProducts = []
 
+        # Por cada producto encontrado que cumpla las reglas, relaciona los valores con las 
+        # reglas de maximos y minimos (orderpoints) y las fechas de creación (productCreatedDate)
         for product in productsOdoo:
             productId    = product['id']
             idtemplate   = product['product_tmpl_id'][0]
@@ -210,6 +219,8 @@ def get_newproducts():
                 'routes'           : product['route_ids'], 
                 'fechaCreacion'    : createdDate
             }) 
+
+            # Retorna todos los productos encontrados
         return ({
             'status'   : 'success',
             'products' : finalProducts

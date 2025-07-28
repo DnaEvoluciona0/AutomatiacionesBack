@@ -15,8 +15,23 @@ def getMaterialsPIPSQL(request):
     return JsonResponse(list(materialsPIPSQL), safe=False)
 
 
-#? Consultas ara conexión con Odoo
-#* Llenar la base de datos con los datos correspondientes entre Producto contine Insumos
+# --------------------------------------------------------------------------------------------------
+# * Función: pullMaterialPi
+# * Descripción: Agrega los datos de materiales Productos * Insumos
+#
+# ! Parámetros:
+#     - request. Como se utiliza para URLS, recibe la información de la consulta
+#
+# ? Condiciones para insertar un MaterialPI en la base de datos:
+#     1. El producto e Insumo deben de existir en sus respectivas tablas
+#     2. Siempre que hace la inserción de materiales, borra los datos ya existentes, esto debido a que no se 
+#        se ha encontrado una forma de realizar actualizaciones
+#       !Nota: Está función puede actualizarse y optimizarse resolviendo esta problemática.
+#
+# ? Returns
+#     - Caso error:
+#           
+# --------------------------------------------------------------------------------------------------
 def pullMaterialPi(request):
 
     try:
