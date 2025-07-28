@@ -18,9 +18,9 @@ from django.contrib import admin
 from django.urls import path
 
 #rutas agregadas
-from Unidades.Produccion_Logistica.maxMin.dataMaxMin import hello, get_sales_by_product, updateMinMax
-from modelosBd.productos.views import pullProductsOdoo, getProductsPSQL
-from modelosBd.insumos.views import pullInsumosOdoo, getInsumosPSQL
+from Unidades.Produccion_Logistica.maxMin.dataMaxMin import updateMinMax
+from modelosBd.productos.views import pullProductsOdoo, getProductsPSQL, updateProducts, createProductsFromOdoo
+from modelosBd.insumos.views import pullInsumosOdoo, getInsumosPSQL, updateInsumosOdoo, createInsumosFromOdoo
 from modelosBd.materialPI.views import getMaterialsPIPSQL, pullMaterialPi
 from modelosBd.clientes.views import *
 from modelosBd.ventas.views import *
@@ -29,22 +29,20 @@ from modelosBd.caducidades.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    #!Ruta de prueba
-    path('hello/', hello),
-
     #!Rutas Actualizar Max y Min Insumos
     path('updatemaxmin/', updateMinMax),
-
-    #!Rutas Sales by Product
-    path('getSalesByProduct/', get_sales_by_product),
 
     #!Rutas de productos
     path('getProducts/', getProductsPSQL),
     path('pullProductsOdoo/', pullProductsOdoo),
+    path('updateProducts/', updateProducts),
+    path('createProductsOdoo/', createProductsFromOdoo),
 
     #!Rutas de Insumos
     path('getInsumos/', getInsumosPSQL),
     path('pullInsumosOdoo/', pullInsumosOdoo),
+    path('updateInsumosOdoo/', updateInsumosOdoo),
+    path('createInsumosOdoo/', createInsumosFromOdoo),
 
     #!Rutas para MaterialesPI
     path('getMaterials/', getMaterialsPIPSQL),

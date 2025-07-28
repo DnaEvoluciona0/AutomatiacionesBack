@@ -4,6 +4,7 @@ from modelosBd.materialPI.models import MaterialPI
 from modelosBd.productos.models import Productos
 from modelosBd.insumos.models import Insumos
 from Conexiones.conectionOdoo import OdooAPI
+from modelosBd.materialPI.ctr_matrerialPI import getInsumoByProduct
 
 # Create your views here.
 
@@ -18,15 +19,12 @@ def getMaterialsPIPSQL(request):
 #* Llenar la base de datos con los datos correspondientes entre Producto contine Insumos
 def pullMaterialPi(request):
 
-    conOdoo = OdooAPI()
-
     try:
-        result = conOdoo.getInsumoByProduct()
-
+        result = getInsumoByProduct()
 
         if result['status'] == 'success':
 
-            materialesPIPSQL = MaterialPI.objects.all().values_list('producto', 'insumo', flat=False)
+            MaterialPI.objects.all().delete()
 
             cantidad = 0
             for material in result['message']:
@@ -48,7 +46,7 @@ def pullMaterialPi(request):
 
                 tupleMaterial = (Productos.objects.only('id').get(sku=productSKU).id, material.get('material')[0])
 
-                if tupleMaterial and tupleMaterial not in materialesPIPSQL:
+                if tupleMaterial:
                 
                     if instanceProduct and instanceInsumo:
                         cantidad += 1
